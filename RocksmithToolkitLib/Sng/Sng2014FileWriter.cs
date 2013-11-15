@@ -4,9 +4,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using RocksmithToolkitLib.Xml;
+using RocksmithToolkitLib.Sng;
 using System.Xml.Serialization;
 using System.Text;
-using RocksmithToolkitLib.Sng;
 
 namespace RocksmithToolkitLib.Sng2014HSL
 {
@@ -14,21 +14,16 @@ namespace RocksmithToolkitLib.Sng2014HSL
         private static readonly int[] StandardMidiNotes = { 40, 45, 50, 55, 59, 64 };
         private static List<ChordNotes> cns = new List<ChordNotes>();
 
-        public static void Write(string xmlSongFile, BinaryWriter writer, ArrangementType arrangementType, Platform platform)
+        public void readXml(Song2014 songXml, Sng2014File sngFile, ArrangementType arrangementType)
         {
-            Song2014 song = Song2014.LoadFromFile(xmlSongFile);
-            var sng = new Sng2014File();
-
-            var sngFileWriter = new Sng2014FileWriter();
-            sngFileWriter.readXml(song, sng, arrangementType);
-            sng.Write(writer);
-            // TODO this was supposed to convert XML to SNG data, it should be wrapped with header and encrypted on another level, making Platform not needed here
-        }
-
-        private void readXml(Song2014 songXml, Sng2014File sngFile, ArrangementType arrangementType)
-        {
-            // TODO
-            Int16[] tuning = { 0,0,0,0,0,0 };
+            Int16[] tuning = {
+                (Int16) songXml.Tuning.String0,
+                (Int16) songXml.Tuning.String1,
+                (Int16) songXml.Tuning.String2,
+                (Int16) songXml.Tuning.String3,
+                (Int16) songXml.Tuning.String4,
+                (Int16) songXml.Tuning.String5,
+            };
             parseEbeats(songXml, sngFile);
             parsePhrases(songXml, sngFile);
             parseChords(songXml, sngFile, tuning, arrangementType == ArrangementType.Bass);
