@@ -59,7 +59,6 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 zOut.finish();
                 byte[] packed = zData.ToArray();
 
-                // TODO seems to work but encryptor probably has a bug
                 if (platform_header == 3) {
                     MemoryStream encrypted = new MemoryStream();
                     MemoryStream data = new MemoryStream();
