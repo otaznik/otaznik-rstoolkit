@@ -13,7 +13,6 @@ namespace RocksmithToolkitLib.Sng2014HSL
     public class Sng2014FileWriter {
         private static readonly int[] StandardMidiNotes = { 40, 45, 50, 55, 59, 64 };
         private static List<ChordNotes> cns = new List<ChordNotes>();
-        private bool consoleMode = !Environment.UserInteractive;
 
         public void readXml(Song2014 songXml, Sng2014File sngFile, ArrangementType arrangementType)
         {
@@ -66,9 +65,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
             sng.Metadata.MaxScore = 100000;
 
             sng.Metadata.MaxDifficulty = getMaxDifficulty(xml);
-            // max used level
-            SongLevel2014 full = xml.Levels[sng.Metadata.MaxDifficulty];
-            sng.Metadata.MaxNotesAndChords = full.Chords.Length + full.Notes.Length;
+            // we need to track note times because of incremental arrangements
+            sng.Metadata.MaxNotesAndChords = note_times.Count;
             sng.Metadata.Unk3_MaxNotesAndChords = sng.Metadata.MaxNotesAndChords;
             sng.Metadata.PointsPerNote = sng.Metadata.MaxScore / sng.Metadata.MaxNotesAndChords;
 
@@ -87,11 +85,14 @@ namespace RocksmithToolkitLib.Sng2014HSL
             sng.Metadata.Unk12_FirstSectionStartTime = start;
         }
 
-        private static Int32 getPhraseIterationId(Song2014 xml, float Time)
+        private static Int32 getPhraseIterationId(Song2014 xml, float Time, bool end)
         {
             Int32 id = 0;
-            while (id+1 < xml.PhraseIterations.Length &&
-                   xml.PhraseIterations[id+1].Time <= Time) {
+            while (id+1 < xml.PhraseIterations.Length) {
+                if (!end && xml.PhraseIterations[id+1].Time > Time)
+                    break;
+                if (end && xml.PhraseIterations[id+1].Time >= Time)
+                    break;
                 ++id;
             }
             return id;
@@ -115,7 +116,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 }
                 bpm.Measure = measure;
                 bpm.Beat = beat;
-                bpm.PhraseIteration = getPhraseIterationId(xml, bpm.Time);
+                bpm.PhraseIteration = getPhraseIterationId(xml, bpm.Time, false);
                 if (beat == 0) {
                     bpm.Mask |= 1;
                     if (measure % 2 == 0)
@@ -380,8 +381,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
                     s.EndTime = xml.Sections[i + 1].StartTime;
                 else
                     s.EndTime = xml.SongLength;
-                s.StartPhraseIterationId = getPhraseIterationId(xml, s.StartTime);
-                s.EndPhraseIterationId = getPhraseIterationId(xml, s.EndTime);
+                s.StartPhraseIterationId = getPhraseIterationId(xml, s.StartTime, false);
+                s.EndPhraseIterationId = getPhraseIterationId(xml, s.EndTime, true);
                 // TODO unknown meaning (rename in HSL and regenerate when discovered)
                 //"Unk12",
                 //"Unk13",
@@ -526,7 +527,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
             n.Unk3_4 = 4;
             n.ChordId = 255;
             n.ChordNotesId = 255;
-            n.PhraseIterationId = getPhraseIterationId(xml, n.Time);
+            n.PhraseIterationId = getPhraseIterationId(xml, n.Time, false);
             n.PhraseId = xml.PhraseIterations[n.PhraseIterationId].PhraseId;
             // TODO
             //"FingerPrintId",
@@ -588,6 +589,9 @@ namespace RocksmithToolkitLib.Sng2014HSL
             n.BendData.BendData = new BendData32[n.BendData.Count];
         }
 
+        // used for counting total notes+chords (incremental arrangements)
+        private Hashtable note_times = new Hashtable();
+
         private void parseArrangements(Song2014 xml, Sng2014File sng) {
             sng.Arrangements = new ArrangementSection();
             sng.Arrangements.Count = getMaxDifficulty(xml) + 1;
@@ -612,7 +616,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
                     anchor.Unk4_StartBeatTime = anchor.StartBeatTime;
                     anchor.FretId = level.Anchors[j].Fret;
                     anchor.Width = (Int32)level.Anchors[j].Width;
-                    anchor.PhraseIterationId = getPhraseIterationId(xml, anchor.StartBeatTime);
+                    anchor.PhraseIterationId = getPhraseIterationId(xml, anchor.StartBeatTime, false);
                     anchors.Anchors[j] = anchor;
                 }
                 a.Anchors = anchors;
@@ -629,12 +633,26 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 a.Fingerprints2 = new FingerprintSection();
                 a.Fingerprints2.Count = 0;
                 a.Fingerprints2.Fingerprints = new Fingerprint[0];
+                // calculated as we go through notes, seems to work
+                a.PhraseIterationCount1 = xml.PhraseIterations.Length;
+                a.NotesInIteration1 = new Int32[a.PhraseIterationCount1];
+                // TODO copy seems to work in here
+                a.PhraseIterationCount2 = a.PhraseIterationCount1;
+                a.NotesInIteration2 = a.NotesInIteration1;
                 // notes and chords sorted by time
                 List<Notes> notes = new List<Notes>();
                 foreach (var note in level.Notes) {
                     var n = new Notes();
                     parseNote(xml, note, n);
                     notes.Add(n);
+                    note_times[note.Time] = note;
+                    for (int j=0; j<xml.PhraseIterations.Length; j++) {
+                        var piter = xml.PhraseIterations[j];
+                        if (piter.Time > note.Time) {
+                            ++a.NotesInIteration1[j-1];
+                            break;
+                        }
+                    }
                 }
                 foreach (var chord in level.Chords) {
                     var n = new Notes();
@@ -643,6 +661,14 @@ namespace RocksmithToolkitLib.Sng2014HSL
                         id = addChordNotes(chord);
                     parseChord(xml, chord, n, id);
                     notes.Add(n);
+                    note_times[chord.Time] = chord;
+                    for (int j=0; j<xml.PhraseIterations.Length; j++) {
+                        var piter = xml.PhraseIterations[j];
+                        if (piter.Time > chord.Time) {
+                            ++a.NotesInIteration1[j-1];
+                            break;
+                        }
+                    }
                 }
                 a.Notes = new NotesSection();
                 a.Notes.Count = notes.Count;
@@ -651,12 +677,6 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 a.PhraseCount = xml.Phrases.Length;
                 // TODO
                 a.AverageNotesPerIteration = new float[a.PhraseCount];
-                // TODO
-                a.PhraseIterationCount1 = 0;
-                a.NotesInIteration1 = new Int32[a.PhraseIterationCount1];
-                // this is a copy?
-                a.PhraseIterationCount2 = a.PhraseIterationCount1;
-                a.NotesInIteration2 = a.NotesInIteration1;
                 sng.Arrangements.Arrangements[i] = a;
             }
         }
