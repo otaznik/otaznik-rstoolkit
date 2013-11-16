@@ -15,6 +15,8 @@ using zlib;
 namespace RocksmithToolkitLib.Sng2014HSL
 {
     public class Sng2014File : Sng {
+        private bool consoleMode = !Environment.UserInteractive;
+
         public Sng2014File() { }
 
         // this is platform independent SNG object
@@ -159,7 +161,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
             string[] order = (string[])getPropertyValue(obj, "order");
             foreach (string name in order) {
                 var value = getPropertyValue(obj, name);
-                Console.WriteLine("{0} = {1}", name, value);
+                if (consoleMode)
+                    Console.WriteLine("{0} = {1}", name, value);
                 if (value.GetType().IsArray || value.GetType().IsPrimitive)
                     writeField(w, value);
                 else
@@ -174,7 +177,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
             if (type.IsArray) {
                 if (type.GetElementType().IsPrimitive) {
                     foreach (var v in (IEnumerable)value) {
-                        Console.WriteLine("{0}", v);
+                        if (consoleMode)
+                            Console.WriteLine("{0}", v);
                         writeField(w, v);
                     }
                 } else {
@@ -185,7 +189,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 switch (type_name) {
                     case "UInt32":
                         w.Write((UInt32)value);
-                        Console.WriteLine("mask: {0:x}", value);
+                        if (consoleMode)
+                            Console.WriteLine("mask: {0:x}", value);
                         break;
                     case "Int32":
                         w.Write((Int32)value);
@@ -203,7 +208,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
                         w.Write((double)value);
                         break;
                     default:
-                        Console.WriteLine("Unhandled type {0} (value: {1})", type_name, value);
+                        if (consoleMode)
+                            Console.WriteLine("Unhandled type {0} (value: {1})", type_name, value);
                         throw new System.Exception("Unhandled type");
                 }
             }
