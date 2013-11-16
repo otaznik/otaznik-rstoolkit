@@ -284,8 +284,6 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 n.PhraseCount = nld.PhraseCount;
                 n.NLD_Phrase = new Int32[n.PhraseCount];
                 for (int j = 0; j < n.PhraseCount; j++) {
-                    if (consoleMode)
-                        Console.WriteLine("{0}", j);
                     n.NLD_Phrase[j] = nld.Nld_phrase[j].Id;
                 }
                 sng.NLD.NLinkedDifficulties[i] = n;
