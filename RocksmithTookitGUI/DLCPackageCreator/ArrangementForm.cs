@@ -157,9 +157,7 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
             {
                 tuningComboBox.Items.Add(tuning);
                 if (firstTuning == null)
-                {
                     firstTuning = tuning;
-                }
             }
             tuningComboBox.SelectedItem = firstTuning;
         }
@@ -197,18 +195,13 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
                 //Arrangment Information
                 arrangementTypeCombo.SelectedItem = arrangement.ArrangementType;
                 arrangementNameCombo.SelectedItem = arrangement.Name;
-                InstrumentTuning tuning = InstrumentTuning.Standard;
-                Enum.TryParse<InstrumentTuning>(arrangement.Tuning, true, out tuning);
+                TuningDefinition tuning = TuningDefinitionRepository.Instance().Select(arrangement.Tuning, currentGameVersion);
                 tuningComboBox.SelectedItem = tuning;
                 int scrollSpeed = Math.Min(scrollSpeedTrackBar.Maximum, Math.Max(scrollSpeedTrackBar.Minimum, arrangement.ScrollSpeed));
                 scrollSpeedTrackBar.Value = scrollSpeed;
                 scrollSpeedDisplay.Text = String.Format("Scroll speed: {0:#.0}", Math.Truncate((decimal)scrollSpeed) / 10);
                 RelativeDifficulty.Text = arrangement.RelativeDifficulty.ToString();
                 Picked.Checked = arrangement.PluckedType == PluckedType.Picked;
-                //Gameplay Path
-                routeMaskLeadRadio.Checked = arrangement.RouteMask == RouteMask.Lead;
-                routeMaskRhythmRadio.Checked = arrangement.RouteMask == RouteMask.Rhythm;
-                routeMaskBassRadio.Checked = arrangement.RouteMask == RouteMask.Bass;
                 //Tone Selector
                 toneBaseCombo.SelectedItem = arrangement.ToneBase;
                 if (toneBaseCombo.SelectedItem == null && toneBaseCombo.Items.Count > 0)
@@ -281,7 +274,8 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
                                             Convert.ToInt32(tuning.Attribute("string4").Value),
                                             Convert.ToInt32(tuning.Attribute("string5").Value)
                                         };
-                            tuningComboBox.SelectedItem = InstrumentTuningExtensions.GetTuningByOffsets(strings);
+                            //tuningComboBox.SelectedItem = InstrumentTuningExtensions.GetTuningByOffsets(strings);
+                            tuningComboBox.SelectedItem = TuningDefinitionRepository.Instance().Select(strings, currentGameVersion);
                         }
                     }
                 }

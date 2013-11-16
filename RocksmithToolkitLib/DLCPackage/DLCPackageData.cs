@@ -46,9 +46,6 @@ namespace RocksmithToolkitLib.DLCPackage
 
         #region RS2014 only
 
-        public string AlbumArt256 { get; set; }
-        public string AlbumArt128 { get; set; }
-        public string AlbumArt64 { get; set; }
         public string OggMACPath { get; set; }
         public string OggPreviewPath { get; set; }
         public string OggPreviewMACPath { get; set; }
