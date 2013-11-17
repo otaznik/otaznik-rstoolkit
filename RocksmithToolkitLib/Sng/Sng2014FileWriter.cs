@@ -392,11 +392,30 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 s.StartPhraseIterationId = getPhraseIterationId(xml, s.StartTime, false);
                 s.EndPhraseIterationId = getPhraseIterationId(xml, s.EndTime, true);
                 // TODO unknown meaning, one byte per Arrangement
-                for (int j=0; j<getMaxDifficulty(xml)+1; j++)
-                    s.Unk12_Arrangements[j] = 1;
+                for (int j=0; j<getMaxDifficulty(xml)+1; j++) {
+                    // TODO this computations creates very different values
+                    // foreach (var note in xml.Levels[j].Notes)
+                    //     if (note.Time >= s.StartTime && note.Time < s.EndTime)
+                    //         ++s.Unk12_Arrangements[j];
+                    // foreach (var chord in xml.Levels[j].Chords)
+                    //     if (chord.Time >= s.StartTime && chord.Time < s.EndTime)
+                    //         ++s.Unk12_Arrangements[j];
+
+                    // zero not allowed even for empty noguitar section?
+                    if (s.Unk12_Arrangements[j] == 0)
+                        s.Unk12_Arrangements[j] = 1;
+                }
                 sng.Sections.Sections[i] = s;
             }
         }
+
+
+        // more constants: http://pastebin.com/Hn3LsP4X
+        // unknown constant -- is this for field Unk3_4?
+        const UInt32 NOTE_TURNING_BPM_TEMPO     = 0x00000004;
+
+        // NoteMask[1]
+        const UInt32 NOTE_FLAGS_NUMBERED        = 0x00000001;
 
         // NoteMask:
         const UInt32 NOTE_MASK_UNDEFINED        = 0x0;
@@ -432,7 +451,12 @@ namespace RocksmithToolkitLib.Sng2014HSL
         const UInt32 NOTE_MASK_CHILD            = 0x10000000;
         const UInt32 NOTE_MASK_ARPEGGIO         = 0x20000000;
         // missing                                0x40000000
-        const UInt32 NOTE_MASK_STRUM            = 0x80000000;
+        const UInt32 NOTE_MASK_STRUM            = 0x80000000; // barre?
+
+        const UInt32 NOTE_MASK_ARTICULATIONS_RH = 0x0000C1C0;
+        const UInt32 NOTE_MASK_ARTICULATIONS_LH = 0x00020628;
+        const UInt32 NOTE_MASK_ARTICULATIONS    = 0x0002FFF8;
+        const UInt32 NOTE_MASK_ROTATION_DISABLED= 0x0000C1E0;
 
         // reverse-engineered values
         // single note mask?
@@ -519,7 +543,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
             // TODO unknown meaning of second mask
             n.NoteMask[0] = parse_notemask(note);
             // TODO value 1 probably places number marker under the note
-            n.NoteMask[1] = 1;
+            n.NoteMask[1] = NOTE_FLAGS_NUMBERED;
             // TODO unknown meaning (rename in HSL and regenerate when discovered)
             //"Unk1",
             n.Time = note.Time;
@@ -561,7 +585,19 @@ namespace RocksmithToolkitLib.Sng2014HSL
         private void parseChord(Song2014 xml, SongChord2014 chord, Notes n, Int32 id) {
             n.NoteMask[0] |= NOTE_MASK_CHORD;
             if (id != -1)
+                // TODO this seems to always add STRUM
                 n.NoteMask[0] |= NOTE_MASK_CHORDNOTES | NOTE_MASK_STRUM;
+
+            // TODO tried STRUM as barre or open chord indicator, but it's something else
+            // var ch_tpl = xml.ChordTemplates[chord.ChordId];
+            // if (ch_tpl.Fret0 == 0 || ch_tpl.Fret1 == 0 ||
+            //     ch_tpl.Fret2 == 0 || ch_tpl.Fret3 == 0 ||
+            //     ch_tpl.Fret4 == 0 || ch_tpl.Fret5 == 0) {
+            //     n.NoteMask[0] |= NOTE_MASK_STRUM;
+            // }
+
+            n.NoteMask[1] = NOTE_FLAGS_NUMBERED;
+
             // TODO unknown meaning (rename in HSL and regenerate when discovered)
             //"Unk1",
             n.Time = chord.Time;
