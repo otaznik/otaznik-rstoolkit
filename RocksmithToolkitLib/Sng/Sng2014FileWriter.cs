@@ -688,6 +688,17 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 a.Notes.Count = notes.Count;
                 notes.Sort((x, y) => x.Time.CompareTo(y.Time));
                 a.Notes.Notes = notes.ToArray();
+
+                // TODO this is an experiment
+                //      causes crash but this pattern appers in original SNG,
+                //      at least at maxDifficulty
+                // for (int j=0; j<a.Notes.Count; j++) {
+                //     if (j+1 < a.Notes.Count)
+                //         a.Notes.Notes[j].Unk4 = (Int16) (j+1);
+                //     if (j > 0)
+                //         a.Notes.Notes[j].Unk5 = (Int16) (j-1);
+                // }
+
                 a.PhraseCount = xml.Phrases.Length;
                 a.AverageNotesPerIteration = new float[a.PhraseCount];
                 var iter_count = new float[a.PhraseCount];
