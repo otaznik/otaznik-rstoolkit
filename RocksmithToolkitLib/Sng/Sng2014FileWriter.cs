@@ -116,7 +116,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 }
                 bpm.Measure = measure;
                 bpm.Beat = beat;
-                bpm.PhraseIteration = getPhraseIterationId(xml, bpm.Time, false);
+                bpm.PhraseIteration = getPhraseIterationId(xml, bpm.Time, true);
                 if (beat == 0) {
                     bpm.Mask |= 1;
                     if (measure % 2 == 0)
