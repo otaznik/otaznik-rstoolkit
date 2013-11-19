@@ -392,14 +392,19 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 s.StartPhraseIterationId = getPhraseIterationId(xml, s.StartTime, false);
                 s.EndPhraseIterationId = getPhraseIterationId(xml, s.EndTime, true);
                 // TODO unknown meaning, one byte per Arrangement
+                //var times = new Dictionary<float,bool>();
                 for (int j=0; j<getMaxDifficulty(xml)+1; j++) {
+                    //var count = times.Count;
                     // TODO this computations creates very different values
                     // foreach (var note in xml.Levels[j].Notes)
-                    //     if (note.Time >= s.StartTime && note.Time < s.EndTime)
-                    //         ++s.Unk12_Arrangements[j];
+                    //     if (note.Time >= s.StartTime && note.Time < s.EndTime) {
+                    //         times[note.Time] = true;
+                    //     }
                     // foreach (var chord in xml.Levels[j].Chords)
-                    //     if (chord.Time >= s.StartTime && chord.Time < s.EndTime)
-                    //         ++s.Unk12_Arrangements[j];
+                    //     if (chord.Time >= s.StartTime && chord.Time < s.EndTime) {
+                    //         times[chord.Time] = true;
+                    //     }
+                    // s.Unk12_Arrangements[j] = (Byte) (times.Count - count);
 
                     // zero not allowed even for empty noguitar section?
                     if (s.Unk12_Arrangements[j] == 0)
@@ -725,15 +730,28 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 notes.Sort((x, y) => x.Time.CompareTo(y.Time));
                 a.Notes.Notes = notes.ToArray();
 
-                // TODO this is an experiment
-                //      causes crash but this pattern appers in original SNG,
-                //      at least at maxDifficulty
-                // for (int j=0; j<a.Notes.Count; j++) {
-                //     if (j+1 < a.Notes.Count)
-                //         a.Notes.Notes[j].Unk4 = (Int16) (j+1);
-                //     if (j > 0)
-                //         a.Notes.Notes[j].Unk5 = (Int16) (j-1);
-                // }
+                // TODO double check if it always produces correct values
+                foreach (var piter in sng.PhraseIterations.PhraseIterations) {
+                    int count = 0;
+                    int j = 0;
+                    for (; j<a.Notes.Count; j++) {
+                        // skip notes outside of a phraseiteration
+                        if (a.Notes.Notes[j].Time < piter.StartTime)
+                            continue;
+                        if (a.Notes.Notes[j].Time >= piter.NextPhraseTime) {
+                            break;
+                        }
+                        // set to next arrangement note
+                        a.Notes.Notes[j].Unk4 = (Int16) (j+1);
+                        // set all but first note to previous note
+                        if (count > 0)
+                            a.Notes.Notes[j].Unk5 = (Int16) (j-1);
+                        ++count;
+                    }
+                    // fix last phrase note
+                    if (count > 0)
+                        a.Notes.Notes[j-1].Unk4 = -1;
+                }
 
                 a.PhraseCount = xml.Phrases.Length;
                 a.AverageNotesPerIteration = new float[a.PhraseCount];
