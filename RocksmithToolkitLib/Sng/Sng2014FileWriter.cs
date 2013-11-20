@@ -607,6 +607,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
 
             // TODO unknown meaning (rename in HSL and regenerate when discovered)
             //"Unk1",
+            n.Unk1 = note_id++;
             n.Time = chord.Time;
             n.StringIndex = unchecked((Byte) (-1));
             // TODO seems to use -1 and lowest positive fret
