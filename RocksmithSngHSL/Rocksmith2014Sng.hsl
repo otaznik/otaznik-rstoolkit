@@ -367,7 +367,8 @@ struct FINGERPRINT_SECTION
 //
 struct NOTES
 {
-    ulong NoteMask[2];
+    ulong NoteMask;
+    ulong NoteFlags;
     // TODO not clear which attributes are significant, but Time certainly is
     long Hash;
     float Time;

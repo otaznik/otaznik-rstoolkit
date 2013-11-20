@@ -863,8 +863,8 @@ public class FingerprintSection
 
 public class Notes
 {
-    public UInt32[] _NoteMask = new UInt32[2];
-    public UInt32[] NoteMask { get { return this._NoteMask; } set { _NoteMask = value; } }
+    public UInt32 NoteMask { get; set; }
+    public UInt32 NoteFlags { get; set; }
     public Int32 Hash { get; set; }
     public float Time { get; set; }
     public Byte StringIndex { get; set; }
@@ -894,6 +894,7 @@ public class Notes
 
     public string[] _order = {
         "NoteMask",
+        "NoteFlags",
         "Hash",
         "Time",
         "StringIndex",
@@ -921,7 +922,8 @@ public class Notes
     };
     public string[] order { get { return this._order; } }
     public void read(BinaryReader r) {
-        this.NoteMask = new UInt32[2]; for (int i=0; i<2; i++) this.NoteMask[i] = r.ReadUInt32();
+        this.NoteMask = r.ReadUInt32();
+        this.NoteFlags = r.ReadUInt32();
         this.Hash = r.ReadInt32();
         this.Time = r.ReadSingle();
         this.StringIndex = r.ReadByte();
