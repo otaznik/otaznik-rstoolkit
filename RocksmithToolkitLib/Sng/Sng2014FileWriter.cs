@@ -581,12 +581,10 @@ namespace RocksmithToolkitLib.Sng2014HSL
             n.PrevIterNote = -1;
             // TODO
             n.Unk6 = -1;
-            // TODO
-            // is FingerId[0] used as SlideTo value?
-            n.FingerId[0] = unchecked((Byte) (-1));
-            n.FingerId[1] = unchecked((Byte) (-1));
-            n.FingerId[2] = unchecked((Byte) (-1));
-            n.FingerId[3] = unchecked((Byte) (-1));
+            n.SlideTo = unchecked((Byte) note.SlideTo);
+            n.SlideUnpitchTo = unchecked((Byte) note.SlideUnpitchTo);
+            n.LeftHand = unchecked((Byte) note.LeftHand);
+            n.Tap = unchecked((Byte) note.Tap);
             n.PickDirection = (Byte)note.PickDirection;
             n.Slap = (Byte)note.Slap;
             n.Pluck = (Byte)note.Pluck;
@@ -640,11 +638,10 @@ namespace RocksmithToolkitLib.Sng2014HSL
             n.PrevIterNote = -1;
             // TODO
             n.Unk6 = -1;
-            // TODO "FingerId",
-            n.FingerId[0] = unchecked((Byte) (-1));
-            n.FingerId[1] = unchecked((Byte) (-1));
-            n.FingerId[2] = unchecked((Byte) (-1));
-            n.FingerId[3] = unchecked((Byte) (-1));
+            n.SlideTo = unchecked((Byte) (-1));
+            n.SlideUnpitchTo = unchecked((Byte) (-1));
+            n.LeftHand = unchecked((Byte) (-1));
+            n.Tap = unchecked((Byte) (-1));
             n.PickDirection = unchecked((Byte) (-1));
             n.Slap = unchecked((Byte) (-1));
             n.Pluck = unchecked((Byte) (-1));
