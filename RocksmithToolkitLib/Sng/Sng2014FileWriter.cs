@@ -304,13 +304,14 @@ namespace RocksmithToolkitLib.Sng2014HSL
             sng.Actions.Count = 0;
             sng.Actions.Actions = new Action[sng.Actions.Count];
 
-            for (int i = 0; i < sng.Actions.Count; i++) {
-                //var action = xml.?[i];
-                var a = new Action();
-                //a.Time = action.Time;
-                //read_string(action.ActionName, a.ActionName);
-                sng.Actions.Actions[i] = a;
-            }
+            // no RS2 SNG is using this
+            // for (int i = 0; i < sng.Actions.Count; i++) {
+            //     //var action = xml.?[i];
+            //     var a = new Action();
+            //     //a.Time = action.Time;
+            //     //read_string(action.ActionName, a.ActionName);
+            //     sng.Actions.Actions[i] = a;
+            // }
         }
 
         private void parseEvents(Song2014 xml, Sng2014File sng) {

@@ -220,6 +220,7 @@ struct N_LINKED_DIFFICULTY_SECTION
     struct N_LINKED_DIFFICULTY NLinkedDifficulties[Count];
 };
 
+// no RS2 SNG is using this
 struct ACTION
 {
     float Time;
