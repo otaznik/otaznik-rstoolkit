@@ -436,7 +436,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
 
         // NoteMask:
         const UInt32 NOTE_MASK_UNDEFINED        = 0x0;
-        // missing                                0x01
+        // missing                                0x01  // not used in lessons
         const UInt32 NOTE_MASK_CHORD            = 0x02; // confirmed
         const UInt32 NOTE_MASK_OPEN             = 0x04; // confirmed
         const UInt32 NOTE_MASK_FRETHANDMUTE     = 0x08;
@@ -456,8 +456,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
         const UInt32 NOTE_MASK_VIBRATO          = 0x010000;
         const UInt32 NOTE_MASK_MUTE             = 0x020000;
         const UInt32 NOTE_MASK_IGNORE           = 0x040000; // confirmed, unknown meaning
-        // missing                                0x080000
-        // missing                                0x100000
+        // missing                                0x080000 leftHand?
+        // missing                                0x100000 // unknown meaning - used in btapping, bvibrato, rchords8, ... always with single note?
         const UInt32 NOTE_MASK_HIGHDENSITY      = 0x200000;
         const UInt32 NOTE_MASK_SLIDEUNPITCHEDTO = 0x400000;
         // missing                                0x800000 single note?
@@ -467,7 +467,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
         const UInt32 NOTE_MASK_PARENT           = 0x08000000; // linkNext=1
         const UInt32 NOTE_MASK_CHILD            = 0x10000000; // note after linkNext=1
         const UInt32 NOTE_MASK_ARPEGGIO         = 0x20000000;
-        // missing                                0x40000000
+        // missing                                0x40000000 // not used in lessons
         const UInt32 NOTE_MASK_STRUM            = 0x80000000; // barre?
 
         const UInt32 NOTE_MASK_ARTICULATIONS_RH = 0x0000C1C0;
@@ -480,6 +480,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
         const UInt32 NOTE_MASK_SINGLE           = 0x00800000;
         // CHORD + STRUM + missing mask
         const UInt32 NOTE_MASK_CHORDNOTES       = 0x01000000;
+        // TODO how different non-zero leftHand values translate into SNG?
+        const UInt32 NOTE_MASK_LEFTHAND         = 0x00080000;
 
         public UInt32 parse_notemask(SongNote2014 note, Notes prev) {
             if (note == null)
@@ -516,12 +518,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
 
             if (note.Ignore != 0)
                 mask |= NOTE_MASK_IGNORE;
-
-            // TODO
-            // leftHand = -1
-            //if (note. != 0)
-            //  mask |= NOTE_MASK_;
-
+            if (note.LeftHand != -1)
+                mask |= NOTE_MASK_LEFTHAND;
             if (note.Mute != 0)
                 mask |= NOTE_MASK_MUTE;
             if (note.PalmMute != 0)
