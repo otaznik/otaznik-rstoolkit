@@ -7,6 +7,7 @@ using RocksmithToolkitLib.Xml;
 using RocksmithToolkitLib.Sng;
 using System.Xml.Serialization;
 using System.Text;
+using System.Linq;
 
 namespace RocksmithToolkitLib.Sng2014HSL
 {
@@ -187,7 +188,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
                     }
                 }
                 // TODO guessing that NOTE mask is used here
-                c.NoteMask[i] = parse_notemask(n);
+                c.NoteMask[i] = parse_notemask(n, null);
                 // TODO no XML example of chordnotes bend (like weezer)?
                 c.BendData[i] = new BendData();
                 for (int j = 0; j < 32; j++)
@@ -463,8 +464,8 @@ namespace RocksmithToolkitLib.Sng2014HSL
         // missing                                0x01000000 chord notes?
         const UInt32 NOTE_MASK_DOUBLESTOP       = 0x02000000;
         const UInt32 NOTE_MASK_ACCENT           = 0x04000000;
-        const UInt32 NOTE_MASK_PARENT           = 0x08000000;
-        const UInt32 NOTE_MASK_CHILD            = 0x10000000;
+        const UInt32 NOTE_MASK_PARENT           = 0x08000000; // linkNext=1
+        const UInt32 NOTE_MASK_CHILD            = 0x10000000; // note after linkNext=1
         const UInt32 NOTE_MASK_ARPEGGIO         = 0x20000000;
         // missing                                0x40000000
         const UInt32 NOTE_MASK_STRUM            = 0x80000000; // barre?
@@ -480,7 +481,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
         // CHORD + STRUM + missing mask
         const UInt32 NOTE_MASK_CHORDNOTES       = 0x01000000;
 
-        public UInt32 parse_notemask(SongNote2014 note) {
+        public UInt32 parse_notemask(SongNote2014 note, Notes prev) {
             if (note == null)
                 return NOTE_MASK_UNDEFINED;
 
@@ -492,9 +493,12 @@ namespace RocksmithToolkitLib.Sng2014HSL
 
             // TODO some masks are not used here (open, arpeggio, chord, ...)
             //      and some are missing (unused attributes below)
-            // linkNext = 0
-            //if (note. != 0)
-            //  mask |= NOTE_MASK_;
+
+            if (note.LinkNext != 0)
+                mask |= NOTE_MASK_PARENT;
+            // add CHILD flag if previous note has linkNext
+            if (prev != null && (prev.NoteMask & NOTE_MASK_PARENT) != 0)
+                mask |= NOTE_MASK_CHILD;
 
             if (note.Accent != 0)
                 mask |= NOTE_MASK_ACCENT;
@@ -556,9 +560,9 @@ namespace RocksmithToolkitLib.Sng2014HSL
         }
 
         private Int32 note_id = 1;
-        private void parseNote(Song2014 xml, SongNote2014 note, Notes n) {
+        private void parseNote(Song2014 xml, SongNote2014 note, Notes n, Notes prev) {
             // TODO unknown meaning of second mask
-            n.NoteMask = parse_notemask(note);
+            n.NoteMask = parse_notemask(note, prev);
             // TODO when to set numbered note?
             n.NoteFlags = NOTE_FLAGS_NUMBERED;
             // TODO all notes get different id/hash for now
@@ -718,7 +722,10 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 int aecnt = 0;
                 foreach (var note in level.Notes) {
                     var n = new Notes();
-                    parseNote(xml, note, n);
+                    Notes prev = null;
+                    if (notes.Count > 0)
+                        prev = notes.Last();
+                    parseNote(xml, note, n, prev);
                     notes.Add(n);
                     note_times[note.Time] = note;
                     for (int j=0; j<xml.PhraseIterations.Length; j++) {
