@@ -146,7 +146,7 @@ struct SYMBOLS_HEADER_SECTION
 // TODO only in vocals
 struct SYMBOLS_TEXTURE
 {
-    bute Font[128];
+    byte Font[128];
     byte FontpathLength;
     byte Unk[15];
 };
