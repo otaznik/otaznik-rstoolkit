@@ -480,7 +480,6 @@ namespace RocksmithToolkitLib.Sng2014HSL
         const UInt32 NOTE_MASK_SINGLE           = 0x00800000;
         // CHORD + STRUM + missing mask
         const UInt32 NOTE_MASK_CHORDNOTES       = 0x01000000;
-        // TODO how different non-zero leftHand values translate into SNG?
         const UInt32 NOTE_MASK_LEFTHAND         = 0x00080000;
 
         public UInt32 parse_notemask(SongNote2014 note, Notes prev) {
