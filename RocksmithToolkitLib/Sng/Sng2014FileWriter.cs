@@ -694,10 +694,12 @@ namespace RocksmithToolkitLib.Sng2014HSL
                     anchors.Anchors[j] = anchor;
                 }
                 a.Anchors = anchors;
-                // TODO no idea what this is, there is no XML/SNG using it?
+                // each slideTo will get anchor extension
                 a.AnchorExtensions = new AnchorExtensionSection();
-                a.AnchorExtensions.Count = 0;
-                a.AnchorExtensions.AnchorExtensions = new AnchorExtension[0];
+                foreach (var note in level.Notes)
+                    if (note.SlideTo != -1)
+                        ++a.AnchorExtensions.Count;
+                a.AnchorExtensions.AnchorExtensions = new AnchorExtension[a.AnchorExtensions.Count];
                 // TODO one for fretting hand and one for picking hand?
                 //"Fingerprints1",
                 a.Fingerprints1 = new FingerprintSection();
@@ -712,6 +714,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 a.NotesInIteration1 = new Int32[a.PhraseIterationCount1];
                 // notes and chords sorted by time
                 List<Notes> notes = new List<Notes>();
+                int aecnt = 0;
                 foreach (var note in level.Notes) {
                     var n = new Notes();
                     parseNote(xml, note, n);
@@ -723,6 +726,12 @@ namespace RocksmithToolkitLib.Sng2014HSL
                             ++a.NotesInIteration1[j-1];
                             break;
                         }
+                    }
+                    if (note.SlideTo != -1) {
+                        var ae = new AnchorExtension();
+                        ae.FretId = (Byte) note.SlideTo;
+                        ae.BeatTime = note.Time + note.Sustain;
+                        a.AnchorExtensions.AnchorExtensions[aecnt++] = ae;
                     }
                 }
                 foreach (var chord in level.Chords) {
