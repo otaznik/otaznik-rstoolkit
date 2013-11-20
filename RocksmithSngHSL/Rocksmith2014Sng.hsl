@@ -190,6 +190,7 @@ struct PHRASE_ITERATION_SECTION
     struct PHRASE_ITERATION PhraseIterations[Count];
 };
 
+// no RS2 SNG is using this
 struct PHRASE_EXTRA_INFO_BY_LEVEL
 {
     long PhraseId;

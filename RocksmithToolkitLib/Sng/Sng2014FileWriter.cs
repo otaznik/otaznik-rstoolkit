@@ -257,18 +257,18 @@ namespace RocksmithToolkitLib.Sng2014HSL
             sng.PhraseExtraInfo.Count = 0;
             sng.PhraseExtraInfo.PhraseExtraInfoByLevel = new PhraseExtraInfoByLevel[sng.PhraseExtraInfo.Count];
 
-            for (int i = 0; i < sng.PhraseExtraInfo.Count; i++) {
-                // TODO
-                //var extra = xml.?[i];
-                var e = new PhraseExtraInfoByLevel();
-                //"PhraseId",
-                //"Difficulty",
-                //"Empty",
-                //"LevelJump",
-                //"Redundant",
-                //"Padding"
-                sng.PhraseExtraInfo.PhraseExtraInfoByLevel[i] = e;
-            }
+            // probably leftover section from RS1 format, not used anymore
+            // for (int i = 0; i < sng.PhraseExtraInfo.Count; i++) {
+            //     //var extra = xml.?[i];
+            //     var e = new PhraseExtraInfoByLevel();
+            //     //"PhraseId",
+            //     //"Difficulty",
+            //     //"Empty",
+            //     //"LevelJump",
+            //     //"Redundant",
+            //     //"Padding"
+            //     sng.PhraseExtraInfo.PhraseExtraInfoByLevel[i] = e;
+            // }
         }
 
         private void parseNLD(Song2014 xml, Sng2014File sng) {
