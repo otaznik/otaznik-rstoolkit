@@ -67,6 +67,7 @@ namespace RocksmithToolkitLib.Sng2014HSL
 
             sng.Metadata.MaxDifficulty = getMaxDifficulty(xml);
             // we need to track note times because of incremental arrangements
+            // TODO this is not correct for e21_bwalking1, same timestamp
             sng.Metadata.MaxNotesAndChords = note_times.Count;
             sng.Metadata.Unk3_MaxNotesAndChords = sng.Metadata.MaxNotesAndChords;
             sng.Metadata.PointsPerNote = sng.Metadata.MaxScore / sng.Metadata.MaxNotesAndChords;
@@ -569,8 +570,9 @@ namespace RocksmithToolkitLib.Sng2014HSL
             n.Hash = note_id++;
             n.Time = note.Time;
             n.StringIndex = note.String;
-            // TODO this is an array, unclear why there are two values
+            // actual fret number
             n.FretId[0] = (Byte) note.Fret;
+            // TODO unknown, many times same, many times different, few times -1
             n.FretId[1] = (Byte) note.Fret;
             // this appears to be always 4
             n.Unk3_4 = 4;
@@ -646,8 +648,9 @@ namespace RocksmithToolkitLib.Sng2014HSL
             n.Hash = note_id++;
             n.Time = chord.Time;
             n.StringIndex = unchecked((Byte) (-1));
-            // TODO seems to use -1 and lowest positive fret
+            // always -1
             n.FretId[0] = unchecked((Byte) (-1));
+            // TODO seems to be always lowest non-zero fret
             n.FretId[1] = (Byte) chordFretId[chord.ChordId];
             // this appears to be always 4
             n.Unk3_4 = 4;
@@ -860,10 +863,11 @@ namespace RocksmithToolkitLib.Sng2014HSL
                         a.Notes.Notes[j-1].NextIterNote = -1;
                 }
 
-                // TODO set if previous note is linkNext or is at same timestamp
                 for (int j=1; j<a.Notes.Notes.Length; j++) {
                     var n = a.Notes.Notes[j];
                     var prev = a.Notes.Notes[j-1];
+
+                    // set ParentPrevNote if previous note is linkNext or is at same timestamp
                     if ((prev.NoteMask & NOTE_MASK_PARENT) != 0 || prev.Time == n.Time) {
                         if (prev.ParentPrevNote == -1)
                             prev.ParentPrevNote = prev.PrevIterNote;
