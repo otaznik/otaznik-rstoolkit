@@ -769,8 +769,13 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 a.Fingerprints2.Fingerprints = fp2.ToArray();
 
                 // calculated as we go through notes, seems to work
+                // NotesInIteration1 is count without ignore="1" notes
                 a.PhraseIterationCount1 = xml.PhraseIterations.Length;
                 a.NotesInIteration1 = new Int32[a.PhraseIterationCount1];
+                // NotesInIteration2 seems to be the full count
+                a.PhraseIterationCount2 = a.PhraseIterationCount1;
+                a.NotesInIteration2 = new Int32[a.PhraseIterationCount2];
+
                 // notes and chords sorted by time
                 List<Notes> notes = new List<Notes>();
                 int aecnt = 0;
@@ -785,7 +790,9 @@ namespace RocksmithToolkitLib.Sng2014HSL
                     for (int j=0; j<xml.PhraseIterations.Length; j++) {
                         var piter = xml.PhraseIterations[j];
                         if (piter.Time > note.Time) {
-                            ++a.NotesInIteration1[j-1];
+                            if (note.Ignore == 0)
+                                ++a.NotesInIteration1[j-1];
+                            ++a.NotesInIteration2[j-1];
                             break;
                         }
                     }
@@ -807,7 +814,9 @@ namespace RocksmithToolkitLib.Sng2014HSL
                     for (int j=0; j<xml.PhraseIterations.Length; j++) {
                         var piter = xml.PhraseIterations[j];
                         if (piter.Time > chord.Time) {
-                            ++a.NotesInIteration1[j-1];
+                            if (chord.Ignore == 0)
+                                ++a.NotesInIteration1[j-1];
+                            ++a.NotesInIteration2[j-1];
                             break;
                         }
                     }
@@ -828,21 +837,6 @@ namespace RocksmithToolkitLib.Sng2014HSL
                 a.Notes.Count = notes.Count;
                 notes.Sort((x, y) => x.Time.CompareTo(y.Time));
                 a.Notes.Notes = notes.ToArray();
-
-                // NotesInIteration2 actually seems to be the full count
-                a.PhraseIterationCount2 = a.PhraseIterationCount1;
-                a.NotesInIteration2 = new Int32[a.PhraseIterationCount2];
-                Array.Copy(a.NotesInIteration1, a.NotesInIteration2, a.PhraseIterationCount1);
-                // TODO experiment - works for bbasics1_lsn53, not for bshifting1
-                // zero immediately repeated phrases in NotesInIteration1
-                // (leaves the last repeated phrase iteration note count)
-                // for (int j=a.PhraseIterationCount2-1; j>0; j--)
-                //     // TODO should we zero only on equal count and otherwise do something else?
-                //     //      we have only example with same count (bbasics1_lsn53)
-                //     // zero if previous is the same phrase and has notes
-                //     if (xml.PhraseIterations[j-1].PhraseId == xml.PhraseIterations[j].PhraseId &&
-                //         a.NotesInIteration2[j] > 0)
-                //         a.NotesInIteration1[j-1] = 0;
 
                 foreach (var piter in sng.PhraseIterations.PhraseIterations) {
                     int count = 0;
