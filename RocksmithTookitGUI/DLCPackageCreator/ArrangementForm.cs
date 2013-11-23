@@ -56,7 +56,6 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
                 SongFile = new SongFile { File = "" },
                 SongXml = new SongXML { File = "" },
                 ArrangementType = ArrangementType.Guitar,
-                RelativeDifficulty = gameVersion == GameVersion.RS2012 ? 1 : 0,
                 ScrollSpeed = 20
             }, toneNames, control, gameVersion)
         {
@@ -67,8 +66,6 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
             InitializeComponent();
             currentGameVersion = gameVersion;
             FillTuningCombo();
-
-            RelativeDifficulty.Visible = gameVersion == GameVersion.RS2012;
 
             foreach (var val in Enum.GetValues(typeof(ArrangementType)))
             {
@@ -104,10 +101,11 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
                 // Arrangement Information
                 arrangementNameCombo.Enabled = selectedType == ArrangementType.Guitar;
                 tuningComboBox.Enabled = selectedType != ArrangementType.Vocal;
+                gbTuningPitch.Visible = currentGameVersion == GameVersion.RS2014;
                 gbScrollSpeed.Enabled = selectedType != ArrangementType.Vocal;
-                RelativeDifficulty.Enabled = selectedType != ArrangementType.Vocal;
                 Picked.Visible = selectedType == ArrangementType.Bass;
                 Picked.Checked = selectedType == ArrangementType.Bass ? false : true;
+                UpdateCentOffset();
 
                 // Gameplay Path
                 UpdateRouteMaskPath(selectedType, selectedArrangementName);
@@ -120,9 +118,9 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
                 toneCCombo.Enabled = currentGameVersion == GameVersion.RS2014;
                 toneDCombo.Enabled = currentGameVersion == GameVersion.RS2014;
 
-                EnableSequencedToneCombo();
+                SequencialToneComboEnabling();
 
-                // DLC ID
+                // Arrangement ID
                 MasterId.Enabled = selectedType != ArrangementType.Vocal;
                 PersistentId.Enabled = selectedType != ArrangementType.Vocal;
             };
@@ -191,7 +189,7 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
             combo.SelectedIndex = 0;
         }
 
-        private void EnableSequencedToneCombo() {
+        private void SequencialToneComboEnabling() {
             toneBCombo.Enabled = toneACombo.SelectedIndex > 0;
             toneCCombo.Enabled = toneBCombo.SelectedIndex > 0;
             toneDCombo.Enabled = toneCCombo.SelectedIndex > 0;
@@ -213,11 +211,12 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
                 arrangementTypeCombo.SelectedItem = arrangement.ArrangementType;
                 arrangementNameCombo.SelectedItem = arrangement.Name;
                 TuningDefinition tuning = TuningDefinitionRepository.Instance().Select(arrangement.Tuning, currentGameVersion);
-                tuningComboBox.SelectedItem = tuning;
+                if (tuning != null)
+                    tuningComboBox.SelectedItem = tuning;
+                frequencyTB.Text = (arrangement.TuningPitch > 0) ? arrangement.TuningPitch.ToString() : "440";
                 int scrollSpeed = Math.Min(scrollSpeedTrackBar.Maximum, Math.Max(scrollSpeedTrackBar.Minimum, arrangement.ScrollSpeed));
                 scrollSpeedTrackBar.Value = scrollSpeed;
                 scrollSpeedDisplay.Text = String.Format("Scroll speed: {0:#.0}", Math.Truncate((decimal)scrollSpeed) / 10);
-                RelativeDifficulty.Text = arrangement.RelativeDifficulty.ToString();
                 Picked.Checked = arrangement.PluckedType == PluckedType.Picked;
                 RouteMask = arrangement.RouteMask;
                 //Tone Selector
@@ -310,12 +309,6 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
                 XmlFilePath.Focus();
                 return;
             }
-            var relDificulty = RelativeDifficulty.Text.ToInt32();
-            if (relDificulty == -1)
-            {
-                RelativeDifficulty.Focus();
-                return;
-            }
             if (!routeMaskLeadRadio.Checked && !routeMaskRhythmRadio.Checked && !routeMaskBassRadio.Checked && (ArrangementType)arrangementTypeCombo.SelectedItem != ArrangementType.Vocal)
             {
                 if (MessageBox.Show("You not selected a Gameplay Path, this arrangement you show only in song list.", DLCPackageCreator.MESSAGEBOX_CAPTION, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == System.Windows.Forms.DialogResult.Cancel)
@@ -331,9 +324,18 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
             //Arrangment Information
             arrangement.Name = (ArrangementName)arrangementNameCombo.SelectedItem;
             arrangement.ArrangementType = (ArrangementType)arrangementTypeCombo.SelectedItem;
+
+            // Tuning
             arrangement.Tuning = tuningComboBox.SelectedItem.ToString();
+            arrangement.TuningPitch = 440;
+            var value = frequencyTB.Text;
+            if (!String.IsNullOrEmpty(value)) {
+                double freq = 440;
+                Double.TryParse(value, out freq);
+                arrangement.TuningPitch = freq;
+            }
+
             arrangement.ScrollSpeed = scrollSpeedTrackBar.Value;
-            arrangement.RelativeDifficulty = relDificulty;
             arrangement.PluckedType = Picked.Checked ? PluckedType.Picked : PluckedType.NotPicked;
 
             //ToneSelector
@@ -372,7 +374,24 @@ namespace RocksmithToolkitGUI.DLCPackageCreator
 
         private void toneCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            EnableSequencedToneCombo();
+            SequencialToneComboEnabling();
+        }
+
+        private void frequencyTB_TextChanged(object sender, EventArgs e) {
+            UpdateCentOffset();
+        }
+
+        private void UpdateCentOffset() {
+            var value = frequencyTB.Text;
+            if (!String.IsNullOrEmpty(value)) {
+                double freq = 440;
+                var isValid = Double.TryParse(value, out freq);
+                if (isValid && freq > 0) {
+                    string noteName;
+                    centOffsetDisplay.Text = TuningFrequency.Frequency2Note(freq, out noteName).ToString();
+                    noteDisplay.Text = noteName;
+                }
+            }
         }
     }
 }

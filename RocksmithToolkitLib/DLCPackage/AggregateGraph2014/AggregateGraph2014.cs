@@ -14,7 +14,7 @@ namespace RocksmithToolkitLib.DLCPackage.AggregateGraph
         public static readonly string CANONICAL_GAMESONG = "/songs/bin/{0}"; //Platform Path [1]
         public static readonly string CANONICAL_ALBUMART = "/gfxassets/album_art";
         public static readonly string CANONICAL_XMLSONG = "/songs/arr";
-        public static readonly string CANONICAL_XBLOCK = "gamexblocks/nsongs";
+        public static readonly string CANONICAL_XBLOCK = "/gamexblocks/nsongs";
         public static readonly string CANONICAL_SOUNDBANK = "/audio/{0}"; //Platform Path [0]
         public static readonly string LOGPATH_SOUNDBANK = "/audio";
 
@@ -258,7 +258,8 @@ namespace RocksmithToolkitLib.DLCPackage.AggregateGraph
             var xml = GraphPart.WhereByValue(graphPartList, TagValue.XML.GetDescription());
             if (xml.Count() > 0) {
                 foreach (var x in xml) {
-                    aggregateGraph.SongXml = new List<GraphItemLLID>();
+                    if (aggregateGraph.SongXml == null)
+                        aggregateGraph.SongXml = new List<GraphItemLLID>();
                     var graphList = GraphPart.WhereByUUID(graphPartList, x.UUID);
                     if (graphList.Exists(p => p.Value.Contains("showlights")))
                         aggregateGraph.ShowlightXml = new GraphItemLLID(x.UUID, graphList);
